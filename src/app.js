@@ -17,6 +17,10 @@ app.use(
       "http://localhost:5714", // clothing-ecommerce frontend
       "http://localhost:5173", // admin-dashboard frontend (Vite dev server)
       "http://localhost:5174", // backup Vite port
+      // Production Vercel URLs
+      "https://shoe-shop-admin-nietky886-thanhtrung-thanhtrungs-projects.vercel.app",
+      "https://*.vercel.app", // Allow all Vercel subdomains
+      process.env.FRONTEND_URL, // From environment variables
     ],
     credentials: true, // Allow cookies to be sent cross-origin
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
@@ -75,6 +79,31 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api", routes);
+
+// Health check endpoint for Railway
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Backend is running",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Shoe Shop Backend API",
+    status: "running",
+    endpoints: [
+      "/api/health",
+      "/api/auth",
+      "/api/products",
+      "/api/orders",
+      "/api/users",
+    ],
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
