@@ -10,18 +10,42 @@ require("./config/database"); // Import database configuration
 const app = express();
 
 // Enhanced CORS configuration
+const allowedOrigins = [
+  // Development URLs
+  process.env.CLIENT_ORIGIN || "http://localhost:3001",
+  "http://localhost:5714", // clothing-ecommerce frontend
+  "http://localhost:5173", // admin-dashboard frontend (Vite dev server)
+  "http://localhost:5174", // backup Vite port
+
+  // Production Vercel URLs
+  "https://admin-dashboard-seven-snowy-72.vercel.app",
+  "https://shop-frontend-ecru.vercel.app",
+  "https://*.vercel.app", // Allow all Vercel subdomains
+
+  // Environment-based URLs
+  process.env.FRONTEND_URL, // From environment variables
+  process.env.ADMIN_URL,
+];
+
+// Filter out undefined values
+const validOrigins = allowedOrigins.filter(Boolean);
+
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_ORIGIN || "http://localhost:3001",
-      "http://localhost:5714", // clothing-ecommerce frontend
-      "http://localhost:5173", // admin-dashboard frontend (Vite dev server)
-      "http://localhost:5174", // backup Vite port
-      // Production Vercel URLs
-      "https://shoe-shop-admin-nietky886-thanhtrung-thanhtrungs-projects.vercel.app",
-      "https://*.vercel.app", // Allow all Vercel subdomains
-      process.env.FRONTEND_URL, // From environment variables
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      if (
+        validOrigins.indexOf(origin) !== -1 ||
+        origin.includes(".vercel.app") ||
+        origin.includes("localhost")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true, // Allow cookies to be sent cross-origin
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Allowed HTTP methods
     allowedHeaders: [
